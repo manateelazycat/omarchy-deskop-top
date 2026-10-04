@@ -39,10 +39,19 @@ cp -r -- "$project_root/renderer" "$stage/renderer"
 if [[ -d $project_root/assets ]]; then cp -r -- "$project_root/assets" "$stage/assets"; fi
 mkdir -- "$stage/qml"
 cp -r -- "$project_root/build/qml/DesktopTop" "$stage/qml/DesktopTop"
-if [[ -d $plugin_target ]]; then
-  mv -- "$plugin_target" "$backup_root/plugin-$(date +%Y%m%d-%H%M%S-%N)"
+if [[ $(realpath -m -- "$project_root") == $(realpath -m -- "$plugin_target") ]]; then
+  # Marketplace installs retain their source tree and Git metadata. Only the
+  # compiled module needs deployment when setup runs inside that same tree.
+  if [[ -d $plugin_target/qml ]]; then
+    mv -- "$plugin_target/qml" "$backup_root/qml-$(date +%Y%m%d-%H%M%S-%N)"
+  fi
+  mv -- "$stage/qml" "$plugin_target/qml"
+else
+  if [[ -d $plugin_target ]]; then
+    mv -- "$plugin_target" "$backup_root/plugin-$(date +%Y%m%d-%H%M%S-%N)"
+  fi
+  mv -- "$stage" "$plugin_target"
 fi
-mv -- "$stage" "$plugin_target"
 python3 - "$hypr_config" "$backup_root" <<'PY'
 from datetime import datetime
 from pathlib import Path

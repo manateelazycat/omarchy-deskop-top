@@ -4,7 +4,7 @@ English | [简体中文](README.zh-CN.md)
 
 A real, interactive btop terminal on the desktop, with the same angular frame, translucent background, corner marks, typography and theme colors as [Omarchy Desktop Clock](https://github.com/manateelazycat/omarchy-desktop-clock).
 
-![Preview](assets/preview.png)
+[Watch the preview video](preview.mp4) · [Original post](https://x.com/manateelazycat/status/2106797188567519713)
 
 ## Features
 
@@ -35,6 +35,25 @@ bash install.sh --no-enable
 ```
 
 Rebuild with the installer after upgrading Qt or libvterm.
+
+### Marketplace setup
+
+The marketplace's generic installer clones the repository without building the terminal module or adding the Hyprland layer rules. After adding the plugin, explicitly run:
+
+```sh
+bash "${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/plugins/io.github.manateelazycat.desktop-top/install.sh" --no-enable
+omarchy plugin enable io.github.manateelazycat.desktop-top
+```
+
+Setup preserves the installed source and Git metadata, so `omarchy plugin update` remains available. After an update, run the setup command again to rebuild the native module. Setup backs up user configuration before adding the scoped, guarded Hyprland include and does not require sudo.
+
+### Remove
+
+```sh
+omarchy plugin remove io.github.manateelazycat.desktop-top
+```
+
+This unloads the plugin and removes its installed directory after confirmation. The guarded include in `~/.config/hypr/hyprland.lua` becomes inactive once the plugin is removed. To remove the include too, delete the block from `-- >>> omarchy-desktop-top >>>` through `-- <<< omarchy-desktop-top <<<`, then run `hyprctl reload` and `hyprctl configerrors`. Configuration backups remain in the state directory.
 
 ## Settings
 
@@ -77,9 +96,10 @@ omarchy plugin validate .
 node --test tests/geometry.test.cjs
 bash tests/run-runtime.sh
 python3 tests/bridge.py
+python3 tests/install.py
 ```
 
-Runtime tests use isolated processes and synthetic Qt input, without moving the system pointer or writing user settings. They cover real btop output, stable dragging, all resize edges, the minimum PTY, keyboard input, theme updates, persisted geometry, desktop occupancy and process cleanup.
+Runtime tests use isolated processes and synthetic Qt input, without moving the system pointer or writing user settings. They cover real btop output, stable dragging, all resize edges, the minimum PTY, keyboard input, theme updates, persisted geometry, desktop occupancy and process cleanup. Installer tests use a temporary fixture to verify repeated marketplace setup preserves source and Git metadata.
 
 ## License
 

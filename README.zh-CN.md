@@ -4,7 +4,7 @@
 
 沿用 [Omarchy Desktop Clock](https://github.com/manateelazycat/omarchy-desktop-clock) 外观的桌面 btop 插件。直角面板、半透明背景、细边框、四角装饰和字体跟随 Omarchy 主题，内部是可交互的真实终端。
 
-![预览](assets/preview.png)
+[观看演示视频](preview.mp4) · [原始帖子](https://x.com/manateelazycat/status/2106797188567519713)
 
 ## 功能
 
@@ -39,6 +39,25 @@ bash install.sh --no-enable
 ```
 
 Qt / libvterm 更新后，可以重新运行安装器编译本机模块。
+
+### 插件商店安装后的设置
+
+商店的通用安装器只克隆仓库，不编译终端模块，也不添加 Hyprland 图层规则。添加插件后，需要明确执行：
+
+```sh
+bash "${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/plugins/io.github.manateelazycat.desktop-top/install.sh" --no-enable
+omarchy plugin enable io.github.manateelazycat.desktop-top
+```
+
+设置会保留已安装目录中的源码和 Git 元数据，因此仍可使用 `omarchy plugin update`。更新后再次执行设置命令编译本地模块。设置脚本在添加专属、带文件存在检查的 Hyprland 引用前备份用户配置，不需要 sudo。
+
+### 卸载
+
+```sh
+omarchy plugin remove io.github.manateelazycat.desktop-top
+```
+
+此命令在确认后停用插件并删除安装目录。插件移除后，`~/.config/hypr/hyprland.lua` 中的引用自动失效。如需一并清理，删除从 `-- >>> omarchy-desktop-top >>>` 到 `-- <<< omarchy-desktop-top <<<` 的整个区块，再执行 `hyprctl reload` 和 `hyprctl configerrors`。状态目录中的配置备份保留。
 
 ## 配置
 
@@ -83,9 +102,10 @@ omarchy plugin validate .
 node --test tests/geometry.test.cjs
 bash tests/run-runtime.sh
 python3 tests/bridge.py
+python3 tests/install.py
 ```
 
-运行时检查在独立进程中使用合成 Qt 鼠标与键盘事件，不移动系统指针、不写用户设置。覆盖真实 btop 输出、拖动稳定性、八向缩放、最小 PTY、键盘输入、主题更新、尺寸恢复、空工作区显示和进程退出。
+运行时检查在独立进程中使用合成 Qt 鼠标与键盘事件，不移动系统指针、不写用户设置。覆盖真实 btop 输出、拖动稳定性、八向缩放、最小 PTY、键盘输入、主题更新、尺寸恢复、空工作区显示和进程退出。安装器测试使用临时目录，验证反复执行商店设置会保留源码和 Git 元数据。
 
 ## 许可证
 
