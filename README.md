@@ -1,0 +1,86 @@
+# Omarchy Desktop Top
+
+English | [简体中文](README.zh-CN.md)
+
+A real, interactive btop terminal on the desktop, with the same angular frame, translucent background, corner marks, typography and theme colors as [Omarchy Desktop Clock](https://github.com/manateelazycat/omarchy-desktop-clock).
+
+![Preview](assets/preview.png)
+
+## Features
+
+- Appears above the wallpaper on each monitor's empty workspace; ordinary, pinned and visible special-workspace windows hide it.
+- Drag the header or frame padding to move. Drag any of the four edges or four corners to resize, with directional cursors.
+- Resizing changes the PTY's rows and columns, allowing btop to reflow without scaling its font. The default four panels require at least **80 columns × 24 rows**, plus the outer frame.
+- Relative position and logical pixel size are shared across monitors, saved once on release and restored at login. Smaller displays clamp the card to available space.
+- Click the terminal for keyboard input; mouse clicks and the wheel work in btop. It does not take keyboard focus before a click. After quitting btop with `q`, click the footer to restart.
+- Isolated software rendering process. One btop process per visible monitor, stopped when its workspace becomes occupied; disabling the plugin stops all workers.
+- Private temporary btop config and theme, based on the user's existing config, with transparent backgrounds, mouse input and one-second updates. The user's btop files are never rewritten.
+
+## Install
+
+Requires Omarchy / Quickshell, Hyprland with Lua configuration, btop, Qt 6.5+ Quick/Qml, libvterm 0.3+, CMake, pkg-config and a C++ compiler. Arch packages: `quickshell btop qt6-declarative libvterm cmake pkgconf gcc`.
+
+```sh
+git clone https://github.com/manateelazycat/omarchy-deskop-top.git
+cd omarchy-deskop-top
+bash install.sh
+```
+
+The installer builds the native terminal module, stages the complete plugin in `~/.config/omarchy/plugins/io.github.manateelazycat.desktop-top/`, adds plugin-specific animation rules, reloads and validates Hyprland, and enables the plugin. Backups go to `~/.local/state/omarchy/desktop-top/backups/`. XDG configuration/state overrides are supported.
+
+To update while preserving activation:
+
+```sh
+bash install.sh --no-enable
+```
+
+Rebuild with the installer after upgrading Qt or libvterm.
+
+## Settings
+
+Edit the existing plugin entry in `~/.config/omarchy/shell.json`:
+
+```json
+{
+  "id": "io.github.manateelazycat.desktop-top",
+  "positionX": 0.64,
+  "positionY": 0.52,
+  "width": 1000,
+  "height": 650,
+  "fontSize": 13,
+  "opacity": 1,
+  "boxes": "cpu mem net proc"
+}
+```
+
+Positions range from 0–1 across available travel. Width and height are logical pixels; the frame adds 52 pixels horizontally and 98 vertically. Font size is 8–32; opacity is 0.2–1, applied to the whole card. Background alpha is 0.76, matching the clock.
+`boxes` supports combinations of the four standard panels; the minimum follows btop's rules for these startup panels. Temporary panel toggles inside btop are not persisted to plugin settings. A monitor too small for the minimum card plus 24-pixel margins does not display it; reduce font size or the startup panels to fit.
+
+```sh
+omarchy-shell desktop-top status
+omarchy-shell desktop-top setPosition 0.64 0.52
+omarchy-shell desktop-top resetPosition
+omarchy-shell desktop-top setSize 1000 650
+omarchy-shell desktop-top resetSize
+omarchy plugin disable io.github.manateelazycat.desktop-top
+omarchy plugin enable io.github.manateelazycat.desktop-top
+```
+
+Status reports the worker, visible monitors, geometry, terminal rows/columns and btop PIDs. Disabling removes inline settings; installation backups retain the previous values.
+
+## Development
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j 4
+omarchy plugin validate .
+node --test tests/geometry.test.cjs
+bash tests/run-runtime.sh
+python3 tests/bridge.py
+```
+
+Runtime tests use isolated processes and synthetic Qt input, without moving the system pointer or writing user settings. They cover real btop output, stable dragging, all resize edges, the minimum PTY, keyboard input, theme updates, persisted geometry, desktop occupancy and process cleanup.
+
+## License
+
+[GPL-3.0-only](LICENSE). Frame, desktop occupancy and host/worker IPC adapted from Omarchy Desktop Clock, Copyright (C) 2026 ManateeLazyCat.
