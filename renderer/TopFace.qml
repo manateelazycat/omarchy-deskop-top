@@ -10,6 +10,7 @@ Item {
     required property var controller
     property bool terminalEnabled: true
     property alias terminal: terminal
+    property bool minimizeHovered: false
     signal focusRequested()
     readonly property color ink: controller.palette.foreground
     readonly property color accent: controller.palette.accent
@@ -41,9 +42,14 @@ Item {
         font { family: face.controller.palette.fontFamily; pixelSize: 12; weight: Font.DemiBold; letterSpacing: 1.6 }
     }
     Text {
-        anchors.right: parent.right; anchors.rightMargin: 26
+        anchors.right: parent.right; anchors.rightMargin: 60
         y: 21; text: "[ BTOP ]"; color: face.dim
         font { family: face.controller.palette.fontFamily; pixelSize: 10; letterSpacing: 0.6 }
+    }
+    MinimizeMark {
+        x: face.width - 50; y: 14
+        accent: face.accent
+        hovered: face.minimizeHovered
     }
     Terminal {
         id: terminal

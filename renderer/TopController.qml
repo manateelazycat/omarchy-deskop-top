@@ -11,6 +11,7 @@ Item {
     property var settings: ({})
     property var palette: ({foreground: "#c0caf5", background: "#1a1b26", accent: "#7aa2f7", fontFamily: "monospace"})
     property var emptyScreens: ({})
+    readonly property var minimizedScreens: Array.isArray(settings.minimizedScreens) ? settings.minimizedScreens : []
     readonly property var eligibleScreens: Quickshell.screens.filter(function(s) { return root.emptyScreens[s.name] === true; })
     readonly property bool anyVisible: eligibleScreens.length > 0
     property point position: Qt.point(0.64, 0.52)
@@ -30,6 +31,19 @@ Item {
     property alias surfaces: surfaces
     signal saveRequested(var nextSettings)
     signal statusChanged()
+
+    function isMinimized(screenName) { return minimizedScreens.indexOf(screenName) !== -1; }
+    function setMinimized(screenName, minimized) {
+        if (!Quickshell.screens.some(function(s) { return s.name === screenName; })
+            || isMinimized(screenName) === minimized) return;
+        if (gesturing && gestureScreen === screenName) cancelGesture();
+        var names = minimizedScreens.filter(function(name) { return name !== screenName; });
+        if (minimized) names.push(screenName);
+        var next = Object.assign({}, settings, {minimizedScreens: names});
+        settings = next;
+        saveRequested(next);
+        statusChanged();
+    }
 
     function configure(config) {
         settings = config.settings || ({});
@@ -93,11 +107,14 @@ Item {
     }
     function status() {
         return {positionX: position.x, positionY: position.y, width: panelWidth, height: panelHeight,
-            gesturing: gesturing, emptyScreens: emptyScreens, palette: palette,
+            gesturing: gesturing, emptyScreens: emptyScreens, palette: palette, minimizedScreens: minimizedScreens,
             minimumColumns: minimum.columns, minimumRows: minimum.rows,
             screens: Quickshell.screens.map(function(screen) {
                 var surface = surfaces.instances.find(function(p) { return p.screen.name === screen.name; });
-                return {name: screen.name, visible: !!surface && surface.fits,
+                return {name: screen.name, visible: !!surface && surface.visible,
+                    minimized: root.isMinimized(screen.name), tabVisible: !!surface && surface.minimizedWindow.visible,
+                    tabX: surface ? surface.minimizedWindow.tabX : 0,
+                    tabWidth: surface ? surface.minimizedWindow.tabWidth : 72,
                     x: surface ? surface.panelX : 0, y: surface ? surface.panelY : 0,
                     width: surface ? surface.panelWidth : 0, height: surface ? surface.panelHeight : 0,
                     columns: surface ? surface.terminal.columns : 0, rows: surface ? surface.terminal.rows : 0,

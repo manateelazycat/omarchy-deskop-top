@@ -104,10 +104,35 @@ ShellRoot {
                 harness.check(terminal.screenText().includes("¹cpu"), "keyboard did not restore CPU panel");
                 surface.displayWindow.priming = false;
                 console.log("TOP_PASS: terminal keyboard input toggles and restores the btop CPU panel");
+                var beforeMinimize = {x: surface.panelX, y: surface.panelY, width: surface.panelWidth, height: surface.panelHeight};
+                var writesBeforeMinimize = harness.writes;
+                harness.check(events.mouseClick(surface.contentItem, surface.panelWidth - 38, 26,
+                    Qt.LeftButton, Qt.NoModifier, 1), "minimize click was not delivered");
+                result.wait(100);
+                harness.check(surface.minimized && !surface.displayWindow.visible
+                    && surface.minimizedWindow.backingWindowVisible && !surface.displayWindow.keyboardWanted,
+                    "minimize did not hide btop, release focus and map a tab");
+                harness.check(!service.gesturing && harness.writes === writesBeforeMinimize + 1,
+                    "minimize started a gesture or saved more than once");
+                harness.check(terminal.running && terminal.processId === originalPid,
+                    "minimize stopped or replaced btop");
+                service.configure({settings: Object.assign({}, harness.lastSettings)});
+                harness.check(surface.minimized, "settings reload lost minimized state");
+                harness.check(events.mouseClick(surface.minimizedWindow.contentItem, 36, 7,
+                    Qt.LeftButton, Qt.NoModifier, 1), "tab restore click was not delivered");
+                result.wait(100);
+                harness.check(!surface.minimized && surface.displayWindow.backingWindowVisible
+                    && !surface.minimizedWindow.visible, "tab did not restore btop");
+                harness.check(surface.panelX === beforeMinimize.x && surface.panelY === beforeMinimize.y
+                    && surface.panelWidth === beforeMinimize.width && surface.panelHeight === beforeMinimize.height
+                    && terminal.processId === originalPid, "restore lost geometry or the original btop process");
+                console.log("TOP_PASS: minimize and tab click restore the same btop process, geometry and saved state");
                 service.palette = {accent: "#f7768e", foreground: "#eeeeee", background: "#101010", fontFamily: "monospace"};
                 result.wait(350);
                 harness.check(String(terminal.accent) === "#f7768e" && terminal.processId === originalPid && terminal.running,
                     "theme update restarted btop");
+                harness.check(String(surface.minimizedWindow.accent) === "#f7768e",
+                    "minimized tab did not follow the theme");
                 console.log("TOP_PASS: live theme update keeps the same btop process");
                 service.palette = {accent: "#7aa2f7", foreground: "#c0caf5", background: "#1a1b26", fontFamily: "monospace"};
                 result.wait(350);

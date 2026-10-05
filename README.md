@@ -12,8 +12,10 @@ A real, interactive btop terminal on the desktop, with the same angular frame, t
 - Drag the header or frame padding to move. Drag any of the four edges or four corners to resize, with directional cursors.
 - Resizing changes the PTY's rows and columns, allowing btop to reflow without scaling its font. The default four panels require at least **80 columns × 24 rows**, plus the outer frame.
 - Relative position and logical pixel size are shared across monitors, saved once on release and restored at login. Smaller displays clamp the card to available space.
+- The top-right minimize button folds the window into a black top-edge tab with a theme-colored center line. Click the tab to restore the same position, size and running btop process. Minimized state is saved separately for each monitor and survives reloads and workspace changes.
+- Near the top center, Desktop Clock uses the left tab slot and Desktop Top the right slot, with a 20-pixel gap. Windows and tabs appear only on empty workspaces.
 - Click the terminal for keyboard input; mouse clicks and the wheel work in btop. It does not take keyboard focus before a click. After quitting btop with `q`, click the footer to restart.
-- Isolated software rendering process. One btop process per visible monitor, stopped when its workspace becomes occupied; disabling the plugin stops all workers.
+- Isolated software rendering process. One btop process per empty monitor, kept running while minimized and stopped when its workspace becomes occupied; disabling the plugin stops all workers.
 - Private temporary btop config and theme, based on the user's existing config, with transparent backgrounds, mouse input and one-second updates. The user's btop files are never rewritten.
 
 ## Install

@@ -27,13 +27,18 @@ PanelWindow {
     readonly property real inputHeight: grabbed ? controller.gestureRect.height : panelHeight
     readonly property var displayWindow: display
     readonly property var terminal: face.terminal
+    readonly property var minimizedWindow: tab
+    // Native remapping can re-announce the same screen; compare its stable
+    // name to avoid coupling minimized state to backing-window creation.
+    readonly property string screenName: screen ? screen.name : ""
+    readonly property bool minimized: controller.isMinimized(screenName)
 
     anchors { top: true; left: true }
     margins { top: panel.inputY; left: panel.inputX }
     implicitWidth: inputWidth; implicitHeight: inputHeight
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
-    visible: fits && !remapping
+    visible: fits && !minimized && !remapping
     WlrLayershell.namespace: "omarchy-desktop-top-input"
     WlrLayershell.layer: WlrLayer.Bottom
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
@@ -78,12 +83,23 @@ PanelWindow {
             anchors.fill: parent
             controller: panel.controller
             terminalEnabled: panel.fits
+            minimizeHovered: minimize.containsMouse
             onFocusRequested: {
                 display.priming = true;
                 display.keyboardWanted = true;
                 focusPrime.restart();
             }
         }
+    }
+
+    MinimizedTab {
+        id: tab
+        screen: panel.screen
+        slot: 1
+        namespace: "omarchy-desktop-top-minimized"
+        accent: panel.controller.palette.accent
+        visible: panel.fits && panel.minimized && !panel.remapping
+        onRestoreRequested: Qt.callLater(function() { panel.controller.setMinimized(panel.screen.name, false); })
     }
     MouseArea {
         id: pointer
@@ -118,6 +134,19 @@ PanelWindow {
         }
         onReleased: if (panel.grabbed) panel.controller.finishGesture()
         onCanceled: if (panel.grabbed) panel.controller.cancelGesture()
+    }
+    MouseArea {
+        id: minimize
+        objectName: "minimizeHitArea"
+        x: panel.inputWidth - 50
+        y: 14
+        width: 24
+        height: 24
+        z: 1
+        hoverEnabled: true
+        acceptedButtons: Qt.LeftButton
+        cursorShape: Qt.PointingHandCursor
+        onClicked: Qt.callLater(function() { panel.controller.setMinimized(panel.screen.name, true); })
     }
     Component.onDestruction: if (grabbed) controller.cancelGesture()
 }

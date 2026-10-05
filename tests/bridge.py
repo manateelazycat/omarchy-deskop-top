@@ -65,7 +65,7 @@ def main():
             btop_pids = []
             try:
                 current = wait_until(lambda: (s if (s := status()).get('connected') and s.get('screens') else None))
-                assert current['version'] == '0.1.0'
+                assert current['version'] == '0.1.1'
                 assert current['positionX'] == 0.31 and current['positionY'] == 0.69
                 assert current['width'] == 1050 and current['height'] == 680
                 worker_pid = current['workerPid']
@@ -93,6 +93,19 @@ def main():
                 current = status()
                 assert [s['btopPid'] for s in current['screens'] if s['running']] == btop_pids
                 print('PASS: settings and live theme cross IPC without replacing terminal processes')
+                visible = next((s for s in current['screens'] if s['visible']), None)
+                if visible:
+                    name = visible['name']
+                    assert call('desktop-top', 'minimize', name) == 'ok'
+                    wait_until(lambda: any(s['name'] == name and s['minimized'] and s['tabVisible']
+                                          and not s['visible'] for s in status()['screens']))
+                    assert [s['btopPid'] for s in status()['screens'] if s['running']] == btop_pids
+                    assert call('desktop-top', 'restore', name) == 'ok'
+                    wait_until(lambda: any(s['name'] == name and s['visible'] and not s['minimized']
+                                          for s in status()['screens']))
+                    assert json.loads(call('bridge-test', 'info'))['writes'] == 4
+                    print('PASS: minimize/restore IPC keeps all btop processes and saves each transition once')
+                assert call('desktop-top', 'minimize', 'unknown-monitor') == 'Unknown screen.'
                 call('bridge-test', 'unload')
                 wait_until(lambda: not Path(f'/proc/{worker_pid}').exists())
                 wait_until(lambda: all(not Path(f'/proc/{pid}').exists() for pid in btop_pids))

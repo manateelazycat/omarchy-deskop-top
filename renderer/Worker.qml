@@ -32,7 +32,12 @@ ShellRoot {
                 parser: SplitParser {
                     onRead: data => {
                         try {
-                            top.configure(JSON.parse(data));
+                            var packet = JSON.parse(data);
+                            if (packet.type === "minimize") {
+                                top.setMinimized(packet.screen, packet.minimized === true);
+                                return;
+                            }
+                            top.configure(packet);
                             root.configured = true;
                             Qt.callLater(root.sendState);
                         } catch (error) { console.warn("Desktop Top: invalid host settings:", error); }
