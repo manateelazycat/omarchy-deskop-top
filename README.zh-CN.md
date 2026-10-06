@@ -26,8 +26,8 @@
 在 Arch Linux 中对应 `quickshell btop qt6-declarative libvterm cmake pkgconf gcc`。
 
 ```sh
-git clone https://github.com/manateelazycat/omarchy-deskop-top.git
-cd omarchy-deskop-top
+git clone https://github.com/manateelazycat/omarchy-desktop-top.git
+cd omarchy-desktop-top
 bash install.sh
 ```
 

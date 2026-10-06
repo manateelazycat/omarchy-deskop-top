@@ -23,8 +23,8 @@ A real, interactive btop terminal on the desktop, with the same angular frame, t
 Requires Omarchy / Quickshell, Hyprland with Lua configuration, btop, Qt 6.5+ Quick/Qml, libvterm 0.3+, CMake, pkg-config and a C++ compiler. Arch packages: `quickshell btop qt6-declarative libvterm cmake pkgconf gcc`.
 
 ```sh
-git clone https://github.com/manateelazycat/omarchy-deskop-top.git
-cd omarchy-deskop-top
+git clone https://github.com/manateelazycat/omarchy-desktop-top.git
+cd omarchy-desktop-top
 bash install.sh
 ```
 
