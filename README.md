@@ -18,6 +18,12 @@ A real, interactive btop terminal on the desktop, with the same angular frame, t
 - Isolated software rendering process. One btop process per empty monitor, kept running while minimized and stopped when its workspace becomes occupied; disabling the plugin stops all workers.
 - Private temporary btop config and theme, based on the user's existing config, with transparent backgrounds, mouse input and one-second updates. The user's btop files are never rewritten.
 
+## Security
+
+The terminal pipes btop's PTY output straight into libvterm. libvterm up to 0.3.3 grows its CSI argument index on every `;` without checking the array bound (`parser.c:233-235`), and btop tree view renders process argv without escaping control characters, so another local user can inject a sequence with more than 16 parameters and write past libvterm's argument array inside this process.
+
+The plugin therefore clamps parameter counts at the PTY boundary itself (`native/CsiFilter.cpp`): sequences with more than 16 parameters are truncated before parsing, while every legitimate sequence passes through byte-identically. This works regardless of the installed btop or libvterm versions and is exercised by `tests/csi_filter.test.cpp`.
+
 ## Install
 
 Requires Omarchy / Quickshell, Hyprland with Lua configuration, btop, Qt 6.5+ Quick/Qml, libvterm 0.3+, CMake, pkg-config and a C++ compiler. Arch packages: `quickshell btop qt6-declarative libvterm cmake pkgconf gcc`.
@@ -95,6 +101,7 @@ Status reports the worker, visible monitors, geometry, terminal rows/columns and
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j 4
 omarchy plugin validate .
+g++ -std=c++17 -Wall -Wextra -Werror -o /tmp/csi_filter.test tests/csi_filter.test.cpp native/CsiFilter.cpp && /tmp/csi_filter.test
 node --test tests/geometry.test.cjs
 bash tests/run-runtime.sh
 python3 tests/bridge.py

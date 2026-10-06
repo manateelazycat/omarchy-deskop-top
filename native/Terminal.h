@@ -9,6 +9,7 @@
 #include <QFont>
 #include <QtQml/qqmlregistration.h>
 #include <vterm.h>
+#include "CsiFilter.h"
 
 // A PTY-backed terminal. libvterm handles VT sequences, UTF-8 and mouse modes;
 // Qt paints the cells on a transparent item inside the desktop card.
@@ -103,6 +104,7 @@ private:
     QString m_boxes = "cpu mem net proc", m_error;
     QTemporaryDir m_directory;
     QSocketNotifier *m_readNotifier = nullptr, *m_writeNotifier = nullptr;
+    CsiFilter m_filter;
     QByteArray m_pendingInput;
     QTimer m_reaper, m_paletteTimer;
 };

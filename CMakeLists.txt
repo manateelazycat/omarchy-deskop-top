@@ -12,7 +12,7 @@ qt_add_qml_module(desktop_top_terminal
     URI DesktopTop VERSION 1.0
     PLUGIN_TARGET desktop_top_terminal
     OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/qml/DesktopTop"
-    SOURCES native/Terminal.h native/Terminal.cpp)
+    SOURCES native/CsiFilter.h native/CsiFilter.cpp native/Terminal.h native/Terminal.cpp)
 target_link_libraries(desktop_top_terminal PRIVATE Qt6::Quick PkgConfig::VTERM util)
 target_include_directories(desktop_top_terminal PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/native")
 target_compile_options(desktop_top_terminal PRIVATE -Wall -Wextra -Wpedantic)

@@ -20,6 +20,12 @@
 - 每个空工作区显示器独立运行 btop，最小化期间继续运行；工作区被应用窗口占用后停止对应进程，禁用插件后停止所有渲染与终端进程。
 - 使用私有的临时 btop 配置和主题，读取现有配置作为基础，启用透明背景、每秒刷新和鼠标输入；不改写用户的 btop 配置。
 
+## 安全性
+
+终端把 btop 的 PTY 输出直接送入 libvterm。libvterm 0.3.3 及更早版本在每遇到一个 `;` 时递增 CSI 参数下标而不检查数组边界（`parser.c:233-235`），而 btop 树状视图渲染进程 argv 时不转义控制字符，因此本机其他用户可以注入超过 16 个参数的序列，在本进程内越过 libvterm 的参数数组写入。
+
+为此插件在 PTY 边界自行钳制参数数量（`native/CsiFilter.cpp`）：超过 16 个参数的序列在解析前被截断，其余序列逐字节无损通过。该防护不依赖系统 btop 或 libvterm 的版本，由 `tests/csi_filter.test.cpp` 覆盖。
+
 ## 安装
 
 需要 Omarchy / Quickshell、使用 Lua 配置的 Hyprland、btop、Qt 6.5+（Quick/Qml）、libvterm 0.3+、CMake、pkg-config 和 C++ 编译器。
@@ -101,6 +107,7 @@ omarchy plugin enable io.github.manateelazycat.desktop-top
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j 4
 omarchy plugin validate .
+g++ -std=c++17 -Wall -Wextra -Werror -o /tmp/csi_filter.test tests/csi_filter.test.cpp native/CsiFilter.cpp && /tmp/csi_filter.test
 node --test tests/geometry.test.cjs
 bash tests/run-runtime.sh
 python3 tests/bridge.py

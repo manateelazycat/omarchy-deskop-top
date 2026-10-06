@@ -240,6 +240,7 @@ void Terminal::restart() {
     m_pid = child;
     fcntl(m_fd, F_SETFL, fcntl(m_fd, F_GETFL) | O_NONBLOCK);
     fcntl(m_fd, F_SETFD, FD_CLOEXEC);
+    m_filter.reset();
     m_readNotifier = new QSocketNotifier(m_fd, QSocketNotifier::Read, this);
     connect(m_readNotifier, &QSocketNotifier::activated, this, &Terminal::readOutput);
     m_writeNotifier = new QSocketNotifier(m_fd, QSocketNotifier::Write, this);
@@ -285,7 +286,13 @@ void Terminal::readOutput() {
     // Bound each activation so a busy terminal cannot starve drag events.
     for (int i = 0; i < 8; ++i) {
         const ssize_t count = read(m_fd, buffer, sizeof(buffer));
-        if (count > 0) vterm_input_write(m_vterm, buffer, count);
+        if (count > 0) {
+            // btop tree view emits unescaped argv, so a local process can inject
+            // CSIs with more parameters than libvterm's fixed argument array
+            // holds. The filter clamps those at the boundary before parsing.
+            const size_t safe = m_filter.push(buffer, size_t(count));
+            if (safe > 0) vterm_input_write(m_vterm, buffer, safe);
+        }
         else if (count < 0 && errno == EINTR) continue;
         else {
             if (count == 0 || (count < 0 && errno == EIO)) m_readNotifier->setEnabled(false);
