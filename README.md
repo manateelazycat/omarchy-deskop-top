@@ -4,7 +4,9 @@ English | [简体中文](README.zh-CN.md)
 
 A real, interactive btop terminal on the desktop, with the same angular frame, translucent background, corner marks, typography and theme colors as [Omarchy Desktop Clock](https://github.com/manateelazycat/omarchy-desktop-clock).
 
-[Watch the preview video](preview.mp4) · [Original post](https://x.com/manateelazycat/status/2106797188567519713)
+https://github.com/user-attachments/assets/897d885b-979f-4844-ae5e-6cfc77114b2a
+
+[Original post](https://x.com/manateelazycat/status/2106797188567519713)
 
 ## Features
 

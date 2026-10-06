@@ -4,7 +4,9 @@
 
 沿用 [Omarchy Desktop Clock](https://github.com/manateelazycat/omarchy-desktop-clock) 外观的桌面 btop 插件。直角面板、半透明背景、细边框、四角装饰和字体跟随 Omarchy 主题，内部是可交互的真实终端。
 
-[观看演示视频](preview.mp4) · [原始帖子](https://x.com/manateelazycat/status/2106797188567519713)
+https://github.com/user-attachments/assets/897d885b-979f-4844-ae5e-6cfc77114b2a
+
+[原始帖子](https://x.com/manateelazycat/status/2106797188567519713)
 
 ## 功能
 
