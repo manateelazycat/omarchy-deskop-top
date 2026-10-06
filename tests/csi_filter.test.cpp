@@ -69,8 +69,10 @@ struct LibvtermMirror {
                 [[fallthrough]];
             case CSI_ARGS: // 220
                 if (c >= '0' && c <= '9') break; // 222
-                if (c == ':') break; // 229
-                if (c == ';') { // 233: the unguarded write
+                // parser.c:229-235: ':' sets CSI_ARG_FLAG_MORE, is rewritten
+                // to ';', and falls through to the same unguarded argi++
+                // write, so both separators count identically.
+                if (c == ':' || c == ';') { // 229-235: the unguarded write
                     argi++;
                     if (argi > 15) oobWrites++;
                     break;
@@ -200,6 +202,41 @@ int main() {
         }
     }
 
+    // Regression for issue #10102 comment 5995705972: ':' increments the
+    // same fixed index, so colon runs must clamp exactly like semicolons.
+    for (int n = 0; n <= 64; ++n) {
+        const std::string input = "\x1b[" + std::string(size_t(n), ':') + "m";
+        const std::string out = filter(input);
+        if (n <= 15) {
+            expect(out, input, "16 colon params stay intact");
+        } else {
+            expect(out, "\x1b[" + std::string(15, ':') + "m", "17+ colon params truncate");
+        }
+        LibvtermMirror m;
+        m.feed(out.data(), out.size());
+        assert(m.oobWrites == 0);
+        if (n >= 16) {
+            LibvtermMirror raw;
+            raw.feed(input.data(), input.size());
+            assert(raw.oobWrites > 0);
+        }
+    }
+
+    // A ':' before any parameter byte still increments argi because
+    // CSI_LEADER falls through to CSI_ARGS, so ':' + 15 ';' + digits
+    // reached the out-of-bounds write before colons were counted.
+    {
+        const std::string input = "\x1b[:" + std::string(15, ';') + "1m";
+        LibvtermMirror raw;
+        raw.feed(input.data(), input.size());
+        assert(raw.oobWrites > 0);
+        const std::string out = filter(input);
+        LibvtermMirror m;
+        m.feed(out.data(), out.size());
+        assert(m.oobWrites == 0);
+        expect(out, "\x1b[:" + std::string(14, ';') + "m", "leader colon counts toward the limit");
+    }
+
     // A long run of separators with no final byte stays suppressed and a
     // later sequence starts fresh.
     {
@@ -212,7 +249,7 @@ int main() {
 
     // Chunk boundaries anywhere in the stream give the same result.
     {
-        const std::string input = "\x1b[" + std::string(40, ';') + "4m" + benign[0];
+        const std::string input = "\x1b[" + std::string(40, ';') + "4m" + benign[0] + "\x1b[" + std::string(40, ':') + "m";
         const std::string whole = filter(input);
         for (size_t size = 1; size <= 7; ++size) {
             std::vector<size_t> chunks(input.size(), size);

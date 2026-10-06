@@ -10,8 +10,10 @@ constexpr unsigned char kCan = 0x18;
 constexpr unsigned char kSub = 0x1a;
 
 // CSI_ARGS_MAX from libvterm's vterm_internal.h. The parser writes
-// args[++argi] on every separator, so 16 parameters stay in bounds and the
-// separator that would open a seventeenth is suppressed instead.
+// args[++argi] on every ';' and on every ':' - a colon is rewritten to a
+// semicolon and falls through to the same unguarded increment
+// (parser.c:229-235) - so 16 parameters stay in bounds and the separator
+// that would open a seventeenth is suppressed instead.
 constexpr int kMaxParams = 16;
 
 bool isLeaderByte(unsigned char c) { return c >= 0x3c && c <= 0x3f; }
@@ -57,16 +59,13 @@ size_t CsiFilter::push(char *data, size_t length) {
                 m_state = State::Escape;
             } else if (c == kCan || c == kSub) {
                 m_state = State::Ground;
-            } else if (c == ';') {
+            } else if (c == ';' || c == ':') {
+                // libvterm rewrites ':' to ';' and falls through to the same
+                // argi++ write (parser.c:229-235), so both count identically.
                 if (m_afterIntermediate) m_state = State::Ground; // invalid there, argi frozen
                 else if (m_suppressing) emit = false;
                 else if (m_separators >= kMaxParams - 1) { m_suppressing = true; emit = false; }
                 else { ++m_separators; m_inLeader = false; }
-            } else if (c == ':') {
-                // Sub-parameter separator: sets a flag only, never grows argi.
-                if (m_afterIntermediate) m_state = State::Ground;
-                else if (m_suppressing) emit = false;
-                else m_inLeader = false;
             } else if (c >= '0' && c <= '9') {
                 if (m_afterIntermediate) m_state = State::Ground;
                 else { m_inLeader = false; if (m_suppressing) emit = false; }

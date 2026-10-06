@@ -7,8 +7,10 @@
 // Bounds CSI parameter counts before bytes reach libvterm.
 //
 // libvterm up to and including 0.3.3 increments its CSI argument index on
-// every ';' without checking CSI_ARGS_MAX (src/parser.c:233-235), so a
-// sequence with more than 16 parameters writes past the long args[16] that
+// every ';' and ':' - parser.c:229-235 rewrites a colon to a semicolon and
+// falls through to the same argi++ - without checking CSI_ARGS_MAX
+// (src/parser.c:233-235), so a sequence with more than 16 parameters writes
+// past the long args[16] that
 // ends the parser union and lands on the callback pointers stored behind it
 // (src/vterm_internal.h:210-233). btop renders process argv without escaping
 // control characters in tree view (src/btop_draw.cpp:2098-2101), so another
@@ -40,7 +42,7 @@ private:
     enum class State { Ground, Escape, Csi };
     State m_state = State::Ground;
     bool m_suppressing = false;        // inside a CSI that already hit the limit
-    int m_separators = 0;              // parameter separators seen in the current CSI
+    int m_separators = 0;              // ';' and ':' separators seen in the current CSI
     bool m_afterIntermediate = false;  // libvterm is in its CSI_INTERMED state
     bool m_inLeader = false;           // only leader bytes 0x3c-0x3f seen so far
 };
