@@ -3,6 +3,7 @@
 
 import QtQuick
 import Quickshell.Hyprland
+import "Visibility.js" as Visibility
 
 // Event-driven native IPC models: no polling, subprocesses or timers.
 QtObject {
@@ -20,15 +21,20 @@ QtObject {
                 result[monitor.name] = false;
                 continue;
             }
-            var occupied = workspace.toplevels.values.length > 0;
+            var occupied = workspace.toplevels.values.some(function(window) {
+                return Visibility.overlapsScreen(window.lastIpcObject, info);
+            });
             var specialId = info.specialWorkspace ? info.specialWorkspace.id : 0;
             if (specialId) {
                 var special = workspaces.find(function(w) { return w.id === specialId; });
-                occupied = occupied || !!(special && special.toplevels.values.length);
+                occupied = occupied || !!(special && special.toplevels.values.some(function(window) {
+                    return Visibility.overlapsScreen(window.lastIpcObject, info);
+                }));
             }
             for (var window of windows) {
                 var client = window.lastIpcObject;
-                if (client.pinned && client.monitor === monitor.id && !client.hidden) occupied = true;
+                if (client.pinned && client.monitor === monitor.id
+                    && Visibility.overlapsScreen(client, info)) occupied = true;
             }
             result[monitor.name] = !occupied;
         }

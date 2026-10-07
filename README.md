@@ -11,6 +11,7 @@ https://github.com/user-attachments/assets/897d885b-979f-4844-ae5e-6cfc77114b2a
 ## Features
 
 - Appears above the wallpaper on each monitor's empty workspace; ordinary, pinned and visible special-workspace windows hide it.
+- Windows entirely outside the screen do not block an empty workspace; partially visible windows still hide the plugin.
 - Drag the header or frame padding to move. Drag any of the four edges or four corners to resize, with directional cursors.
 - Resizing changes the PTY's rows and columns, allowing btop to reflow without scaling its font. The default four panels require at least **80 columns × 24 rows**, plus the outer frame.
 - Relative position and logical pixel size are shared across monitors, saved once on release and restored at login. Smaller displays clamp the card to available space.
